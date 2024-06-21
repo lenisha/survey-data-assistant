@@ -14,6 +14,7 @@ In this sample, we will show how to use [Azure OpenAI Assistants](https://learn.
     - deployment of `gpt-4-1106-preview`/`gpt-35-turbo-1106` or later for use by the **OpenAI assistant**. Both work, but `gpt-35-turbo-1106` is faster and `gpt-4-1106-preview` is more accurate. (**OPENAI_ASSISTANT_MODEL**)
     - deployment of `gpt-35-turbo-1106` or later for use by the **Data Analyst** to perform some limited NL to SQL. (**OPENAI_ANALYST_CHAT_MODEL**)
 - Azure Application Insights (**APPINSIGHTS_CONNECTION_STRING**)
+- SQL Server ODBC driver installed
 
 Copy `.env.sample` to `.env` and fill in the values:
 
@@ -24,7 +25,7 @@ OPENAI_API_BASE="https://***.openai.azure.com/"
 OPENAI_API_KEY="******************"
 OPENAI_ASSISTANT_MODEL="gpt-35-turbo-1106"
 OPENAI_ANALYST_CHAT_MODEL="gpt-35-turbo-1106"
-OPENAI_ASSISTANT_ID="asst_0leWabwuOmzsNVG5Kst1CpeV" <-- you will create this further down
+OPENAI_ASSISTANT_ID="asst_0leWabwuOmzsNVG5KCpeV" <-- you will create this further down
 APPINSIGHTS_CONNECTION_STRING="InstrumentationKey=***;IngestionEndpoint=https://****.in.applicationinsights.azure.com/;LiveEndpoint=https://****"
 ```
 
@@ -54,7 +55,7 @@ This should ouput something like this:
 OPENAI_API_KEY ******
 OPENAI_API_BASE https://******.openai.azure.com
 OPENAI_API_VERSION 2024-02-15-preview
-{'id': 'asst_wgEXCRBQ7E4BfznSkGgJy41k', 'created_at': 1714610540, 'description': None, 'instructions': "\nYou are a helpful assistant that helps the user potentially with the help of some functions.\n\nIf you are using multiple tools to solve a user's task, make sure to communicate \ninformation learned from one tool to the next tool.\nFirst, make a plan of how you will use the tools to solve the user's task and communicated\nthat plan to the user with the first response. Then execute the plan making sure to communicate\nthe required information between tools since tools only see the information passed to them;\nThey do not have access to the chat history.\nIf you think that tool use can be parallelized (e.g. to get weather data for multiple cities) \nmake sure to use the multi_tool_use.parallel function to execute.\n\nOnly use a tool when it is necessary to solve the user's task. \nDon't use a tool if you can answer the user's question directly.\nOnly use the tools provided in the tools list -- don't make up tools!!\n\nAnything that would benefit from a tabular presentation should be returned as markup table.\n", 'metadata': {}, 'model': 'gpt-35-turbo-1106', 'name': 'Contoso Assistant', 'object': 'assistant', 'tools': [{'type': 'code_interpreter'}, {'function': {'name': 'sales_data_insights', 'description': '\n            get some data insights about the contoso sales data. This tool has information about total sales, return return rates, discounts given, etc., by date, product category, etc.\n            you can ask questions like:\n            - query for the month with the strongest revenue\n            - which day of the week has the least sales in january\n            - query the average value of orders by month\n            - what is the average sale value for Tuesdays\n            If you are unsure of the data available, you can ask for a list of categories, days, etc.\n            - query for all the values for the main_category\n            If a query cannot be answered, the tool will return a message saying that the query is not supported. otherwise the data will be returned.\n            ', 'parameters': {'type': 'object', 'properties': {'question': {'type': 'string', 'description': "The question you want to ask the tool in plain English. e.g. 'what is the average sale value for Tuesdays'"}}, 'required': ['question']}}, 'type': 'function'}], 'response_format': None, 'temperature': None, 'tool_resources': None, 'top_p': None, 'file_ids': []}
+{'id': 'asst_wgEXCRBQ7E4BfznSkGgJy41k', 'created_at': 1714610540, 'description': None, 'instructions': "\nYou are a helpful assistant that helps the user potentially with the help of some functions.\n\nIf you are using multiple tools to solve a user's task, make sure to communicate \ninformation learned from one tool to the next tool.\nFirst, make a plan of how you will use the tools to solve the user's task and communicated\nthat plan to the user with the first response. Then execute the plan making sure to communicate\nthe required information between tools since tools only see the information passed to them;\nThey do not have access to the chat history.\nIf you think that tool use can be parallelized (e.g. to get weather data for multiple cities) \nmake sure to use the multi_tool_use.parallel function to execute.\n\nOnly use a tool when it is necessary to solve the user's task. \nDon't use a tool if you can answer the user's question directly.\nOnly use the tools provided in the tools list -- don't make up tools!!\n\nAnything that would benefit from a tabular presentation should be returned as markup table.\n", 'metadata': {}, 'model': 'gpt-35-turbo-1106', 'name': 'Survey Assistant', 'object': 'assistant', 'tools': [{'type': 'code_interpreter'}, {'function': {'name': 'survey_data_insights', 'description': '\n            get some data insights about the contoso survey data. This tool has information about total survey, return return rates, discounts given, etc., by date, product category, etc.\n            you can ask questions like:\n            - query for the month with the strongest revenue\n            - which day of the week has the least survey in january\n            - query the average value of orders by month\n            - what is the average sale value for Tuesdays\n            If you are unsure of the data available, you can ask for a list of categories, days, etc.\n            - query for all the values for the main_category\n            If a query cannot be answered, the tool will return a message saying that the query is not supported. otherwise the data will be returned.\n            ', 'parameters': {'type': 'object', 'properties': {'question': {'type': 'string', 'description': "The question you want to ask the tool in plain English. e.g. 'what is the average sale value for Tuesdays'"}}, 'required': ['question']}}, 'type': 'function'}], 'response_format': None, 'temperature': None, 'tool_resources': None, 'top_p': None, 'file_ids': []}
 Assistant created with id asst_wgEXCRBQ7E4BfznSkGgJy41k
 add the following to your .env file
 OPENAI_ASSISTANT_ID="asst_wgEXCRBQ7E4BfznSkGgJy41k"
@@ -109,8 +110,12 @@ Open two browser tabs, one to `http://localhost:8000` and one to `http://localho
 
 Should be able to chat with the assistant in the chat UI and see the traces in the other tab.
 
+### High Level Architecture
+
+![Survey assistant](./images/survey%20assistant.png)
+
 ### Sequence Diagram
-Here is an example of a sequence diagram that illustrates the flow of an assistant interaction with the Sales Data Insights tool. The flow starts with the frontend asking for a line chart of sales data. The Promptflow service then calls the assistant to get the sales data. The assistant then calls the Sales Data Insights tool to get the sales data. The Sales Data Insights tool then calls a SQL database to get the data. The data is then passed back to the assistant, which then calls the Code Interpreter tool to generate the line chart. The line chart is then passed back to the frontend. The flow is illustrated below: 
+Here is an example of a sequence diagram that illustrates the flow of an assistant interaction with the Survey Data Insights tool. The flow starts with the frontend asking for a line chart of survey data. The Promptflow service then calls the assistant to get the survey data. The assistant then calls the Survey Data Insights tool to get the survey data. The Survey Data Insights tool then calls a SQL database to get the data. The data is then passed back to the assistant, which then calls the Code Interpreter tool to generate the line chart. The line chart is then passed back to the frontend. The flow is illustrated below: 
 ```mermaid
 sequenceDiagram
     autonumber
@@ -122,24 +127,24 @@ sequenceDiagram
         participant CodeInterpreter
     end
     
-    Frontend->>Promptflow: show me sales data in a line chart
+    Frontend->>Promptflow: show me survey data in a line chart
     activate Promptflow
-    Promptflow->>Assistant: show me sales data in a line chart
+    Promptflow->>Assistant: show me survey data in a line chart
     activate Assistant
     loop 
         Assistant->>Assistant: call LLM
     end
-    Assistant-->>Promptflow: tool_call: SDI("get sales data")
+    Assistant-->>Promptflow: tool_call: SDI("get survey data")
     deactivate Assistant
-    Promptflow-->Frontend: notify:calling SDI("get sales data") 
-    Promptflow->>SurveyDataInsights:  get sales data
+    Promptflow-->Frontend: notify:calling SDI("get survey data") 
+    Promptflow->>SurveyDataInsights:  get survey data
     activate SurveyDataInsights
     loop 
         SurveyDataInsights->>SurveyDataInsights: call SQL
     end
-    SurveyDataInsights-->>Promptflow: ["sales", "data", "in", "json", "format"]
+    SurveyDataInsights-->>Promptflow: ["survey", "data", "in", "json", "format"]
     deactivate SurveyDataInsights
-    Promptflow->>Assistant: tool_reply: ["sales", ...] 
+    Promptflow->>Assistant: tool_reply: ["survey", ...] 
     activate Assistant
     loop 
         Assistant->>Assistant: call LLM
@@ -276,11 +281,11 @@ Following this format:
 
 This will allow you to execute the same queries as above and pin them to the same Dashboard.
 
-In addition, you can pull data from App Insights to build datasets for validation and fine tuning. For instance, in our example the sub-flow that performs that provides the sales data insights is called `sales_data_insights`. That means that you will find traces with that name and with the `span_type == "Flow"` from which you can retrieve the input and output parameters with a query like this:
+In addition, you can pull data from App Insights to build datasets for validation and fine tuning. For instance, in our example the sub-flow that performs that provides the survey data insights is called `survey_data_insights`. That means that you will find traces with that name and with the `span_type == "Flow"` from which you can retrieve the input and output parameters with a query like this:
 
 ```kql
 dependencies
-| where name == "sales_data_insights" and customDimensions.span_type == "Flow"
+| where name == "survey_data_insights" and customDimensions.span_type == "Flow"
 | extend inputs = parse_json(tostring(customDimensions["inputs"]))
 | extend output = parse_json(tostring(customDimensions["output"]))
 | project inputs.question, output.query, output.error
