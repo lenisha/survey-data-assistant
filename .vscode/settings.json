@@ -18,5 +18,15 @@
         "test"
     ],
     "debugpy.debugJustMyCode": false,
-    "appService.zipIgnorePattern": ["__pycache__", "*.vscode*"]
+    "appService.zipIgnorePattern": [
+        "__pycache__",
+        "*.vscode*"
+    ],
+    "azureFunctions.deploySubpath": "ingest_data",
+    "azureFunctions.scmDoBuildDuringDeployment": true,
+    "azureFunctions.pythonVenv": ".venv",
+    "azureFunctions.projectLanguage": "Python",
+    "azureFunctions.projectRuntime": "~4",
+    "debug.internalConsoleOptions": "neverOpen",
+    "azureFunctions.projectLanguageModel": 2
 }
