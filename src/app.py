@@ -166,7 +166,9 @@ if __name__ == "__main__":
     start_trace()
     setup_app_insights()
 
-    print("using the follwoing chat_model", os.getenv("OPENAI_CHAT_MODEL"))
-
+    print("using the following chat_model", os.getenv("OPENAI_CHAT_MODEL"))
+    from chainlit.logger import logger
+    logger.warning("check file exists: {}".format(os.path.exists("chainlit.md")))
+    
     from chainlit.cli import run_chainlit
     run_chainlit(__file__)

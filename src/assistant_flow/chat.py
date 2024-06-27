@@ -107,6 +107,7 @@ if __name__ == "__main__":
 
     start_trace()
 
+   
     # write tokens to output file
     with open(args.output, "w") as f:
         for token in _test()["chat_output"]:

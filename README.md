@@ -324,3 +324,21 @@ This project follows below responsible AI guidelines and best practices, please 
 - [Microsoft Responsible AI Guidelines](https://www.microsoft.com/en-us/ai/responsible-ai)
 - [Responsible AI practices for Azure OpenAI models](https://learn.microsoft.com/en-us/legal/cognitive-services/openai/overview)
 - [Safety evaluations transparency notes](https://learn.microsoft.com/en-us/azure/ai-studio/concepts/safety-evaluations-transparency-note)
+
+
+
+## Deploy
+https://learn.microsoft.com/en-us/azure/app-service/deploy-zip?tabs=cli#create-a-project-zip-package
+
+
+```
+zip -r deploy.zip  * assistant_flow/* survey_data_insights/* -x **__pycache__\* **/**/__pycache__\*  **/.chainlit\*
+
+az webapp deploy --resource-group WSP  --name wsp-survey-en --src-path deploy.zip
+```
+
+```
+az webapp config set --resource-group WSP --name wsp-survey-en --startup-file "chainlit run app.py --port 8000 --host 0.0.0.0"
+
+az webapp config appsettings set --resource-group WSP --name wsp-survey-en --settings OPENAI_API_BASE="https://.openai.azure.com/" OPENAI_API_KEY="" OPENAI_ASSISTANT_ID="" OPENAI_ASSISTANT_MODEL="gpt-4o" OPENAI_ANALYST_CHAT_MODEL="gpt-4o" APPINSIGHTS_CONNECTION_STRING="2" SQL_CONNECTION_STRING="DRIVER={ODBC Driver 17 for SQL Server};Server=tcp:.database.windows.net,1433;Database=;Uid=;Pwd=;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;" @appsettings.json
+```
