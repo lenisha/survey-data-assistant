@@ -46,7 +46,8 @@ def create_table_ifnotexists(conn):
                 [Driver_Value] [nvarchar](150) NULL,
                 [Topics] [nvarchar](600) NULL,
                 [Survey_Location] [nvarchar](150) NULL,
-                [Labels] [nvarchar](950) NULL
+                [Labels] [nvarchar](950) NULL,
+                [Sentiment] [nvarchar](100) NULL       
                 ) ON [PRIMARY]"""
             ) 
         conn.commit()
@@ -71,6 +72,7 @@ def send_message(messages, model_name, max_response_tokens=150):
 
 
 def summarize_text(text):
+
     SUMMARIZE_TEMPLATE_V2 = """ 
     Identify the main themes in these customer survey responses. 
     Remove words like articles and prepositions.
@@ -86,6 +88,21 @@ def summarize_text(text):
     If not sufficient information for extraction, answer with empty topic ''
     """
 
+    SENTIMENT_TEMPLATE = """
+        Evaluate the sentiment in these feedback comments from survey responses. Classify the text into: 'neutral', 'negative', 'mixed' or 'positive'
+
+        For example:  
+        Feedback is: Service was as expected. I am planning another order from WSP. I liked the quality of what I bought.  
+    
+        'positive'
+
+        Feedback is : Lack of effective support and void in local technical leadership for Horizon transition. No improvements 6 weeks into transition - still can't see budgets or project to date spent, etc
+    
+        'negative'
+
+        Do not provide exaplantion. Only category from the set: 'neutral', 'negative', 'mixed' or 'positive'
+    """
+
     logging.info(f"Summarizing text: {text}")
     # check if its Nan
     if text is None:
@@ -98,13 +115,23 @@ def summarize_text(text):
     response = send_message(messages, model_name=AZURE_OPENAI_GPT_DEPLOYMENT, max_response_tokens=500)
 
     logging.info(f"Summarized text: {response}")
-    return f"{response}"
+
+
+    messages=[
+                    {"role": "system", "content": SENTIMENT_TEMPLATE },
+                    {"role": "user", "content": text}
+             ]
+    sentiment = send_message(messages, model_name=AZURE_OPENAI_GPT_DEPLOYMENT, max_response_tokens=500)
+
+    logging.info(f"Sentiment: {sentiment}")
+
+    return f"{response}", f"{sentiment}"
 
 
 #####  FUNCTION        
 
 @app.blob_trigger(arg_name="myblob", path="surveydata",
-                               connection="wspeneros_STORAGE") 
+                               connection="Monitor_STORAGE") 
 def blob_trigger(myblob: func.InputStream):
     logging.info(f"Python blob trigger function processed blob"
                 f"Name: {myblob.name}"
@@ -137,20 +164,20 @@ def blob_trigger(myblob: func.InputStream):
     batch_data = []
     for index, row in df.iterrows():
         # Assuming summarize_text is a function that summarizes the 'Comment' column
-        summarized_text = summarize_text(row['Comment']) if pd.notna(row['Comment']) else ''
+        summarized_text, sentiment = summarize_text(row['Comment']) if pd.notna(row['Comment']) else ''
         # Prepare the data tuple for insertion
         score = float(row['Score']) if pd.notna(row['Score']) else 0.0
         topics = row['Topics'] if pd.notna(row['Topics']) else ''
-        data_tuple = (row['Comment'], row['Round Date'], row['Question'], score, row['Group'], row['Driver/Value'], topics, row['Survey Location'], summarized_text)
+        data_tuple = (row['Comment'], row['Round Date'], row['Question'], score, row['Group'], row['Driver/Value'], topics, row['Survey Location'], summarized_text, sentiment)
         
-        logging.info(f"Inserting row {index}: {data_tuple}")
+        #logging.info(f"Inserting row {index}: {data_tuple}")
         # Add the current row's data tuple to the batch
         batch_data.append(data_tuple)
         # When batch size is reached, execute insert for the batch
         if len(batch_data) == batch_size:
             cursor.executemany("""
-                INSERT INTO survey_data ([Comment], [Date], [Question], [Score], [Group_Name], [Driver_Value], [Topics], [Survey_Location], [Labels])
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""", batch_data)
+                INSERT INTO survey_data ([Comment], [Date], [Question], [Score], [Group_Name], [Driver_Value], [Topics], [Survey_Location], [Labels], [Sentiment])
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", batch_data)
             conn.commit()  # Commit the transaction
             logging.info(f"Inserted batch of {batch_size} rows")
             batch_data = []  # Reset the batch data list
@@ -160,8 +187,8 @@ def blob_trigger(myblob: func.InputStream):
     # Insert any remaining rows in the last batch
     if batch_data:
         cursor.executemany("""
-            INSERT INTO survey_data ([Comment], [Date], [Question], [Score], [Group_Name], [Driver_Value], [Topics], [Survey_Location], [Labels])
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""", batch_data)
+            INSERT INTO survey_data ([Comment], [Date], [Question], [Score], [Group_Name], [Driver_Value], [Topics], [Survey_Location], [Labels], [Sentiment])
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", batch_data)
         conn.commit()
         logging.info(f"Inserted final batch of {len(batch_data)} rows")
     logging.info("All rows have been inserted.")

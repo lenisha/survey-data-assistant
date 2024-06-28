@@ -1,0 +1,16 @@
+{
+  "BUILD_FLAGS": "UseExpressBuild",
+  "ENABLE_ORYX_BUILD": "true",
+  "SCM_DO_BUILD_DURING_DEPLOYMENT":"true",
+  "OPENAI_API_TYPE":"azure",
+  "OPENAI_API_VERSION":"2024-02-15-preview",
+  "AZURE_OPENAI_SERVICE_KEY": "",
+  "AZURE_OPENAI_GPT_DEPLOYMENT": "",
+  "AZURE_OPENAI_SERVICE":"",
+  "APPINSIGHTS_CONNECTION_STRING":"",
+  "SQL_CONNECTION_STRING":"DRIVER={ODBC Driver 17 for SQL Server};Server=tcp:",
+  "AzureWebJobsStorage": "",
+  "FUNCTIONS_WORKER_RUNTIME": "python",
+  "AzureWebJobsFeatureFlags": "EnableWorkerIndexing",
+  "Monitor_STORAGE": ""
+}

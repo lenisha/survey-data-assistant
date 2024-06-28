@@ -5,3 +5,6 @@
 azure-functions
 pandas
 openpyxl
+pyodbc
+openai
+azure-identity
