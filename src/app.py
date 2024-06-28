@@ -52,6 +52,27 @@ def setup_app_insights():
     # Get a tracer
     return trace.get_tracer(__name__) 
 
+@cl.set_starters
+def set_starters():
+    return [
+        cl.Starter(
+            label="Survey Locations",
+            message="show the survey data by location in a bar chart."
+            ),
+
+        cl.Starter(
+            label="Average Scores by Location",
+            message="how the average scores aggregated by location a line chart"
+            ),
+        cl.Starter(
+            label="Common Topics",
+            message="show the most trending topics in the survey data with Score less then 5"
+            )
+      
+        ]
+
+
+
 @cl.on_chat_start
 def start_chat():
     print("starting chat")
@@ -167,8 +188,6 @@ if __name__ == "__main__":
     setup_app_insights()
 
     print("using the following chat_model", os.getenv("OPENAI_CHAT_MODEL"))
-    from chainlit.logger import logger
-    logger.warning("check file exists: {}".format(os.path.exists("chainlit.md")))
     
     from chainlit.cli import run_chainlit
     run_chainlit(__file__)
