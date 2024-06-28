@@ -164,7 +164,7 @@ def blob_trigger(myblob: func.InputStream):
     batch_data = []
     for index, row in df.iterrows():
         # Assuming summarize_text is a function that summarizes the 'Comment' column
-        summarized_text, sentiment = summarize_text(row['Comment']) if pd.notna(row['Comment']) else '',''
+        summarized_text, sentiment = summarize_text(row['Comment']) if pd.notna(row['Comment']) else ('','')
         # Prepare the data tuple for insertion
         score = float(row['Score']) if pd.notna(row['Score']) else 0.0
         topics = row['Topics'] if pd.notna(row['Topics']) else ''
