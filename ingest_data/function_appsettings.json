@@ -4,6 +4,7 @@
   "SCM_DO_BUILD_DURING_DEPLOYMENT":"true",
   "OPENAI_API_TYPE":"azure",
   "OPENAI_API_VERSION":"2024-02-15-preview",
+  "AzureFunctionsJobHost__functionTimeout": "01:00:00",
   "AZURE_OPENAI_SERVICE_KEY": "",
   "AZURE_OPENAI_GPT_DEPLOYMENT": "",
   "AZURE_OPENAI_SERVICE":"",
