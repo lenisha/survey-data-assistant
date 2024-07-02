@@ -75,11 +75,14 @@ def comment_exists(text, file_name, conn):
     
     cursor = conn.cursor()
     
+    if ( len(text) > 800 ):
+        text = text[:800] + "%"
+
     # SQL query to check if the comment exists
-    query = "SELECT TOP 1 * FROM survey_data WHERE Comment = ?" #and File_Name = ?"
+    query = "SELECT TOP 1 * FROM survey_data WHERE Comment LIKE ? and File_Name = ?"
     
     # Execute the query with the comment
-    cursor.execute(query, (text,))
+    cursor.execute(query, (text, file_name, ))
     
     # Fetch the result
     results = cursor.fetchone()
@@ -102,7 +105,7 @@ def send_message(messages, model_name, max_response_tokens=150):
         )
         return response.choices[0].message.content
     except Exception as e:
-        logging.error(f"An error occurred: {e}")
+        logging.warning(f"An error occurred: {e}")
         return ''
 
 
@@ -203,13 +206,13 @@ def blob_trigger(myblob: func.InputStream):
         try:
             comment = row['Comment'] if pd.notna(row['Comment']) else ''
             comment_id = comment_exists(text = comment,file_name=myblob.name,conn=conn)
-            if comment_id != -1 and not FORCE_REWRITE:
+            if comment == '' or comment_id != -1 and not FORCE_REWRITE:
                 logging.info(f"Comment exists in the database: {index}")
                 continue
             # Summarize_text is a function that summarizes the 'Comment' column
             summarized_text, sentiment = summarize_text(row['Comment']) if pd.notna(row['Comment']) else ('','')
         except Exception as e:
-            logging.error(f"An error occurred trying to summarize the data: {e} {row['Comment']}") 
+            logging.warning(f"An error occurred trying to summarize the data: {e} {row['Comment']}") 
             summarized_text = ''
             sentiment = ''
         
@@ -231,7 +234,8 @@ def blob_trigger(myblob: func.InputStream):
                 logging.info(f"Inserted batch of {batch_size} rows")
                 batch_data = []  # Reset the batch data list
         except Exception as e:
-            logging.error(f"An error occurred trying to insert the data: {e}")        
+            logging.warning(f"An error occurred trying to insert the data: {e}")  
+            batch_data = []  # Reset the batch data list      
             continue
 
     try:
@@ -243,6 +247,6 @@ def blob_trigger(myblob: func.InputStream):
             conn.commit()
             logging.info(f"Inserted final batch of {len(batch_data)} rows")
     except Exception as e:        
-        logging.error(f"An error occurred trying to insert the final batch of data: {e}")        
+        logging.warning(f"An error occurred trying to insert the final batch of data: {e}")        
         
     logging.info("All rows have been inserted.")
