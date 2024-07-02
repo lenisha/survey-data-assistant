@@ -206,7 +206,7 @@ def blob_trigger(myblob: func.InputStream):
         try:
             comment = row['Comment'] if pd.notna(row['Comment']) else ''
             comment_id = comment_exists(text = comment,file_name=myblob.name,conn=conn)
-            if comment == '' or comment_id != -1 and not FORCE_REWRITE:
+            if comment == '' or comment_id != -1:
                 logging.info(f"Comment exists in the database: {index}")
                 continue
             # Summarize_text is a function that summarizes the 'Comment' column
