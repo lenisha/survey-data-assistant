@@ -127,22 +127,23 @@ def summarize_text(text):
     """
 
     SENTIMENT_TEMPLATE = """
-        Evaluate the sentiment in these feedback comments from survey responses. Classify the text into: 'neutral', 'negative', 'mixed' or 'positive'; 'unknown' if sentiment is not clear.
+        Evaluate the sentiment in these feedback comments from survey responses. Classify the text into: neutral, negative, mixed or positive; unknown if sentiment is not clear.
 
         For example:  
         Feedback is: Service was as expected. I am planning another order from WSP. I liked the quality of what I bought.  
-        'positive'
+        Answer: positive
 
         Feedback is : Lack of effective support and void in local technical leadership for Horizon transition. No improvements 6 weeks into transition - still can't see budgets or project to date spent, etc
-        'negative'
+        Answer: negative
 
         Feedback is: Yes
-        'positive'
+        Answer: positive
 
         Feedback is: I am not sure what you are asking
-        'uknown'
+        Answer: uknown
 
-        Do not provide exaplantion. Only category from the set: 'neutral', 'negative', 'mixed', 'positive' or 'unknown'
+        Do not provide exaplantion. Only category from the set: neutral, negative, mixed, positive or unknown.
+        Provide just one overall sentiment for the entire feedback. Do not include quotes or explanation.
     """
 
     logging.info(f"Summarizing text: {text}")

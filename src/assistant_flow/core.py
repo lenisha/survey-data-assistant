@@ -5,6 +5,8 @@ import time
 import os
 import logging
 import json
+import random
+import datetime
 
 from openai import AzureOpenAI
 
@@ -108,7 +110,11 @@ class AssistantsAPIGlue:
             assistant_id=self.assistant_id,
         )
         logging.info(f"Run status: {run.status}")
-        self.queue.send(f"\nRunning message on Thread: {self.thread_id}\n")
+        logging.info(f"Running message on Thread: {self.thread_id}")
+        #self.queue.send(f"\nRunning message on Thread: {self.thread_id}\n")
+        holdingTextList=['Please wait', 'Just a moment', 'One minute', 'Thank you']
+        holdingText=random.choice (holdingTextList)
+        self.queue.send(f"\n{holdingText}\n")
 
         start_time = time.time()
 
@@ -169,7 +175,13 @@ class AssistantsAPIGlue:
 
                 for tool_call in run.required_action.submit_tool_outputs.tool_calls:
                     trace_tool(tool_call.model_dump())
-                    self.queue.send(f"\nTool call: {tool_call.function.name} with arguments: {tool_call.function.arguments}\n")
+                    #self.queue.send(f"\nTool call: {tool_call.function.name} with arguments: {tool_call.function.arguments}\n")
+                    logging.info(f"\nTool call: {tool_call.function.name} with arguments: {tool_call.function.arguments}\n")
+                    processingTextListPrefix=['Querying the', 'Requesting', 'Gathering', 'Accessing the', 'Seeking more', 'Collating']
+                    processingTextListSuffix=['data', 'information', 'figures']
+                    processingTextPrefix=random.choice (processingTextListPrefix)
+                    processingTextSuffix=random.choice (processingTextListSuffix)
+                    self.queue.send(f"\n{processingTextPrefix} {processingTextSuffix}\n")
 
                     if tool_call.type == "function":
                         tool_func = self.tools[tool_call.function.name]
@@ -180,7 +192,7 @@ class AssistantsAPIGlue:
                         tool_call_outputs.append(
                             {
                                 "tool_call_id": tool_call.id,
-                                "output": json.dumps(tool_call_output),
+                                "output": json.dumps(tool_call_output, default=json_serializer),
                             }
                         )
                     else:
@@ -203,6 +215,17 @@ class AssistantsAPIGlue:
 
             else:
                 raise ValueError(f"Unknown run status: {run.status}")
+        else:
+            run = self.client.beta.threads.runs.retrieve(
+                thread_id=self.thread_id, run_id=run.id
+            )
+            self.client.beta.threads.runs.cancel(run.id,thread_id=self.thread_id)
+            self.queue.end()
+            return
+
+def json_serializer(obj):
+    if isinstance(obj, (datetime.date, datetime.datetime)):
+        return obj.isoformat()
 
 def log_step(step):
     logging.info(
@@ -278,4 +301,3 @@ class QueuedIteratorStream:
                 break
 
             yield token
-
