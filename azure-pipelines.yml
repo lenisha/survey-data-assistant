@@ -40,14 +40,14 @@ stages:
       inputs:
         versionSpec: '$(pythonVersion)'
       
-    - script: |
-        python -m venv antenv
-        source antenv/bin/activate
-        python -m pip install --upgrade pip
-        pip install setup
-        pip install --target="./.python_packages/lib/site-packages" -r ./requirements.txt
-      workingDirectory: $(workingDirectory)
-      displayName: "Install requirements"
+    #- script: |
+    #    python -m venv antenv
+    #    source antenv/bin/activate
+    #    python -m pip install --upgrade pip
+    #    pip install setup
+    #    pip install --target="./.python_packages/lib/site-packages" -r ./requirements.txt
+    #  workingDirectory: $(workingDirectory)
+    #  displayName: "Install requirements"
 
     - task: ArchiveFiles@2
       displayName: 'Archive files'
@@ -85,3 +85,5 @@ stages:
               appType: functionAppLinux
               appName: $(functionAppName)
               package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
+              deploymentMethod: zipDeploy
+              appSettings: -SCM_DO_BUILD_DURING_DEPLOYMENT true
