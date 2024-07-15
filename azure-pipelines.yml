@@ -84,5 +84,5 @@ stages:
               appType: functionAppLinux
               appName: $(functionAppName)
               package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
-              deploymentMethod: zipDeploy
+              #deploymentMethod: zipDeploy
               appSettings: -SCM_DO_BUILD_DURING_DEPLOYMENT true
