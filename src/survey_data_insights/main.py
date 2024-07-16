@@ -10,7 +10,7 @@ import json
 from azure.ai.inference import ChatCompletionsClient
 from azure.ai.inference.models import SystemMessage, UserMessage
 from azure.core.credentials import AzureKeyCredential
-from .system_message import system_message, system_message_short
+from .system_message import system_message
 
 from typing import TypedDict
 class Result(TypedDict):
@@ -53,7 +53,7 @@ class SurveyDataInsights:
         import time
         start = time.time()
         
-        print("getting sales data insights")
+        print("getting survey data insights")
         print("question", question)
 
         if self.model_type == "azure_openai":
@@ -64,9 +64,11 @@ class SurveyDataInsights:
             response = client.chat.completions.create(
                 model= os.getenv("OPENAI_ANALYST_CHAT_MODEL"),
                 messages=messages, 
+                max_tokens=1000,
+                temperature=0
             )
         elif self.model_type.lower() == "phi3_mini":
-            combined_message = UserMessage(content=f"{system_message_short}\n\n{question}\nGive only the query in SQL format")
+            combined_message = UserMessage(content=f"{system_message}\n\n{question}\nGive only the query in SQL format")
             messages = [combined_message]
             response = client.create(messages=messages, temperature=0, max_tokens=1000)
         elif self.model_type.lower() == "phi3_medium":

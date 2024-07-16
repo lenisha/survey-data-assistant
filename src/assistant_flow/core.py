@@ -232,6 +232,9 @@ def log_step(step):
             "The assistant has moved forward to step {}".format(step["id"])
     )
     step_details = step["step_details"]
+    logging.info(
+            "Step Details {}".format(step_details)
+    )
     if step_details["type"] == "tool_calls":
         for tool_call in step_details["tool_calls"]:
             if tool_call["type"] == "code_interpreter":
