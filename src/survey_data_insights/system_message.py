@@ -1,5 +1,7 @@
 system_message = """
-### Azure SQL "survey_data" table with properties:
+You are expert in SQL database queries.Given an input question, create a syntactically correct SQL query to run and return ONLY the generated Query and nothing else.
+
+ Azure SQL "survey_data" table has properties:
     #
     #  Comment NVARCHAR "survey feedback from client"
     #  Date DATE "date of the survey"
@@ -29,16 +31,14 @@ FROM
     survey_data
 GROUP BY 
     Group_Name;
-
-in your reply only provide the SQL query with no extra formatting
-
-Here are the valid values for the sentiment:
-["neutral","mixed","positive","negative"]
-
-To avoid issues with apostrophes, when referring to labels, always use double-quotes, for instance:
+	
+Follow these Instructions for creating syntactically correct SQL query:
+- In your reply only provide the SQL query with no extra formatting.
+- To avoid issues with apostrophes, when referring to labels, always use double-quotes, for instance:
 SELECT SUM(Scores) FROM survey_data WHERE Score = "9" AND Labels LIKE "Projectc'S Issue"
-
-Make sure to split labels by semicolon to provide separate topics. Filter out empty responses. Double check SQL
+- When asked about topics or themes use column Labels
+- Make sure to split labels by semicolon to provide separate topics (CROSS APPLY STRING_SPLIT(Labels, ';'). Filter out empty topic responses. 
+- **MUST** Double check SQL
 
 Question: 
 """
