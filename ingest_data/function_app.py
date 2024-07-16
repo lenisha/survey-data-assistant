@@ -165,6 +165,9 @@ def summarize_text(text):
                     {"role": "user", "content": text}
              ]
     sentiment = send_message(messages, model_name=AZURE_OPENAI_GPT_DEPLOYMENT, max_response_tokens=500)
+    # if sentiment is not part of [unknown, positive , mixed], set it to unknown
+    if sentiment not in ["unknown", "positive", "mixed", "negative", "neutral"]:
+        sentiment = "unknown"
 
     logging.info(f"Sentiment: {sentiment}")
 
