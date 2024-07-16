@@ -188,13 +188,15 @@ class AssistantsAPIGlue:
                         tool_call_output = tool_func(
                             **json.loads(tool_call.function.arguments)
                         )
-
-                        tool_call_outputs.append(
-                            {
-                                "tool_call_id": tool_call.id,
-                                "output": json.dumps(tool_call_output, default=json_serializer),
-                            }
-                        )
+                        try:
+                            tool_call_outputs.append(
+                                {
+                                    "tool_call_id": tool_call.id,
+                                    "output": json.dumps(tool_call_output, default=json_serializer),
+                                }
+                            )
+                        except Exception as e:
+                            logging.error(f"Exception appending tool_call_outputs: {e}")    
                     else:
                         raise ValueError(f"Unsupported tool call type: {tool_call.type}")
 
@@ -219,7 +221,10 @@ class AssistantsAPIGlue:
             run = self.client.beta.threads.runs.retrieve(
                 thread_id=self.thread_id, run_id=run.id
             )
-            self.client.beta.threads.runs.cancel(run.id,thread_id=self.thread_id)
+            try:
+                self.client.beta.threads.runs.cancel(run.id,thread_id=self.thread_id)
+            except Exception as e:
+                logging.error(f"Exception cancelling run: {e}")    
             self.queue.end()
             return
 
