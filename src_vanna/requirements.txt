@@ -1,0 +1,10 @@
+pysqlite3-binary
+chromadb
+vanna[chromadb,openai]
+openai
+azure-identity
+azure-ai-ml
+flask
+pyodbc
+db-dtypes
+python-dotenv
