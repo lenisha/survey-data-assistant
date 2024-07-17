@@ -21,10 +21,10 @@ openai_client = AzureOpenAI (
             azure_endpoint=f"https://{AZURE_OPENAI_SERVICE}.openai.azure.com"
         )
 
-def create_table_ifnotexists(conn):
+def create_table_ifnotexists(conn, name = 'survey_data'):
         # Check for table existence
     cursor = conn.cursor()    
-    table_name = 'survey_data'
+    table_name = name
 
     cursor.execute("""
         SELECT COUNT(*)
@@ -37,38 +37,48 @@ def create_table_ifnotexists(conn):
         logging.info(f"Table '{table_name}' exists.")
     else:
         logging.info(f"Table '{table_name}' does not exist.")
-        # Create table if it does not exist
-        cursor.execute("""
-                CREATE TABLE [survey_data] (
-                [ID] [int] IDENTITY(1,1) PRIMARY KEY,
-                [Comment] [nvarchar](4000) NULL,
-                [Date] [date] NULL,
-                [Question] [nvarchar](550) NULL,
-                [Score] [float] NULL,
-                [Group_Name] [nvarchar](550) NULL,
-                [Driver_Value] [nvarchar](550) NULL,
-                [Topics] [nvarchar](600) NULL,
-                [Survey_Location] [nvarchar](250) NULL,
-                [Labels] [nvarchar](950) NULL,
-                [Sentiment] [nvarchar](650) NULL,
-                [File_Name] [nvarchar](650) NULL,          
-                ) ON [PRIMARY]"""
-            ) 
-        conn.commit()
-        logging.info(f"Table '{table_name}' created.")
+        if table_name == 'survey_data':
+            # Create table if it does not exist
+            cursor.execute("""
+                    CREATE TABLE [survey_data] (
+                    [ID] [int] IDENTITY(1,1) PRIMARY KEY,
+                    [Comment] [nvarchar](4000) NULL,
+                    [Date] [date] NULL,
+                    [Question] [nvarchar](550) NULL,
+                    [Score] [float] NULL,
+                    [Group_Name] [nvarchar](550) NULL,
+                    [Driver_Value] [nvarchar](550) NULL,
+                    [Topics] [nvarchar](600) NULL,
+                    [Survey_Location] [nvarchar](250) NULL,
+                    [Labels] [nvarchar](950) NULL,
+                    [Sentiment] [nvarchar](650) NULL,
+                    [File_Name] [nvarchar](650) NULL,          
+                    ) ON [PRIMARY]"""
+                ) 
+            conn.commit()
+            logging.info(f"Table '{table_name}' created.")
 
-        cursor.execute("""
-            -- Single Column Index on 'Score'
-            CREATE INDEX idx_score ON survey_data (Score);
+            cursor.execute("""
+                -- Single Column Index on 'Score'
+                CREATE INDEX idx_score ON survey_data (Score);
 
-            -- Single Column Index on 'Survey_Location'
-            CREATE INDEX idx_survey_location ON survey_data (Survey_Location);
+                -- Single Column Index on 'Survey_Location'
+                CREATE INDEX idx_survey_location ON survey_data (Survey_Location);
 
-            -- Composite Index on both 'Score' and 'Survey_Location'
-            CREATE INDEX idx_score_location ON survey_data (Score, Survey_Location);
-            """)
-        conn.commit()
-        logging.info(f"Indexes created.")
+                -- Composite Index on both 'Score' and 'Survey_Location'
+                CREATE INDEX idx_score_location ON survey_data (Score, Survey_Location);
+                """)
+            conn.commit()
+            logging.info(f"Indexes created.")
+        else:
+            cursor.execute("""
+                    CREATE TABLE [labels] (
+                    [ID] [int] NULL,
+                    [Label] [nvarchar](1000) NULL
+                    """) 
+            conn.commit()
+            logging.info(f"Table created {table_name}.")
+
 
 # Function to check if a comment exists in the database
 def comment_exists(text, file_name, conn):
@@ -91,7 +101,34 @@ def comment_exists(text, file_name, conn):
         return -1
     else:
         return results[0]  #return ID
-    
+
+# Function to parse labels and insert into label table
+def parse_and_insert_labels(conn, row):
+    id = row['ID']
+    print(f'Processing ID: {id}')
+    labels = row['Labels'].split(';')
+    # remove quotes
+    labels = [label.replace('\'', '') for label in labels]
+    # strip whitespace before and after
+    labels = [label.strip() for label in labels]
+    for label in labels:
+        insert_query = f"INSERT INTO labels (ID, Label) VALUES (?, ?)"
+        conn.execute(insert_query, (id, label))
+    conn.commit()
+
+def add_all_labels(conn, filename):
+    # Reading data from 'survey_data' table
+    query = 'SELECT ID, Labels FROM survey_data WHERE File_Name ?'
+    survey_data = pd.read_sql(query, conn, params=(filename,))
+
+    print(f'found {len(survey_data)} rows')
+
+    # Applying the function to each row in the dataframe
+    survey_data.apply(parse_and_insert_labels, axis=1)
+
+    # Committing the transaction
+    conn.commit()
+
 def send_message(messages, model_name, max_response_tokens=150):
     try:
         response = openai_client.chat.completions.create(
@@ -174,6 +211,7 @@ def summarize_text(text):
     return f"{response}", f"{sentiment}"
 
 
+
 #####  FUNCTION        
 
 @app.blob_trigger(arg_name="myblob", path="surveydata",
@@ -198,6 +236,7 @@ def blob_trigger(myblob: func.InputStream):
      # Connect to the SQL database
     conn = pyodbc.connect(conn_str)
     create_table_ifnotexists(conn)
+    create_table_ifnotexists(conn,'labels')
 
     # Insert data into the table
     cursor = conn.cursor()
@@ -253,4 +292,13 @@ def blob_trigger(myblob: func.InputStream):
     except Exception as e:        
         logging.warning(f"An error occurred trying to insert the final batch of data: {e}")        
         
-    logging.info("All rows have been inserted.")
+    logging.info("All survey rows have been inserted.")
+    
+    try:
+        # add all labels
+        add_all_labels(conn=conn, filename=myblob.name)
+    except  Exception as e:
+        logging.warning(f"An error occurred trying to insert the final batch of data: {e}") 
+    
+    logging.info("All survey Label rows have been inserted.")
+    
