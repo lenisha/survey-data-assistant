@@ -64,8 +64,9 @@ class SurveyDataInsights:
             response = client.chat.completions.create(
                 model= os.getenv("OPENAI_ANALYST_CHAT_MODEL"),
                 messages=messages, 
-                max_tokens=1000,
-                temperature=0
+                max_tokens=800,
+                temperature=0.0,
+                top_p=0.95
             )
         elif self.model_type.lower() == "phi3_mini":
             combined_message = UserMessage(content=f"{system_message}\n\n{question}\nGive only the query in SQL format")
@@ -89,7 +90,7 @@ class SurveyDataInsights:
             query = query[6:-3].strip()
 
         try:
-            print("Executing SQL query:", query)
+            print("*****  Executing SQL query:", query)
             data = self.query_db(query)
         except Exception as e:
             end = time.time()
@@ -100,6 +101,8 @@ class SurveyDataInsights:
 
         end = time.time()
         execution_time = round(end - start, 2)
+
+        print(f"retrieved records {len(data)}")
 
         return {"data": data, "error": str(None), "query": query, "execution_time": execution_time}
     
