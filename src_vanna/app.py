@@ -77,8 +77,10 @@ vanna_app = VannaFlaskApp(vn,
                 allow_llm_to_see_data=True,
                 sql=False, 
                 summarization=False, 
+                suggested_questions = True,
                 ask_results_correct=False,
                 redraw_chart=False,
+                csv_download=False,
                 title="Welcome to WSP Analytics")
 
 
