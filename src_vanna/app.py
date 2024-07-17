@@ -74,6 +74,7 @@ setup_training_data(vn, os.getenv("FORCE_RETRAIN", False))
 
 print("Starting Flask application")
 vanna_app = VannaFlaskApp(vn,
+                logo = "https://www.wsp.com/-/media/who-we-are/global/image/wsp-logo/img-png-wsp-black.png",
                 allow_llm_to_see_data=True,
                 sql=False, 
                 summarization=False, 
@@ -81,6 +82,7 @@ vanna_app = VannaFlaskApp(vn,
                 ask_results_correct=False,
                 redraw_chart=False,
                 csv_download=False,
+                followup_questions=True,
                 title="Welcome to WSP Analytics")
 
 
