@@ -201,11 +201,16 @@ class AssistantsAPIGlue:
                         raise ValueError(f"Unsupported tool call type: {tool_call.type}")
 
                 if tool_call_outputs:
-                    _ = self.client.beta.threads.runs.submit_tool_outputs(
-                        thread_id=self.thread_id,
-                        run_id=run.id,
-                        tool_outputs=tool_call_outputs,
-                    )
+                    try:
+                        _ = self.client.beta.threads.runs.submit_tool_outputs(
+                            thread_id=self.thread_id,
+                            run_id=run.id,
+                            tool_outputs=tool_call_outputs,
+                        )
+                    except Exception as e:
+                        logging.error(f"Exception submitting tool outputs: {e}")
+                        raise ValueError(f"Exception submitting tool outputs: {e}")
+
             elif run.status in ["cancelled", "expired", "failed"]:
                 raise ValueError(f"Run failed with status: {run.status}")
 

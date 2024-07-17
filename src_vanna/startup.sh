@@ -3,4 +3,4 @@ if ! grep -q "deb http://ftp.debian.org/debian stable main" /etc/apt/sources.lis
 fi
 apt update && apt install -y sqlite3
 
-gunicorn --bind=0.0.0.0 --timeout 600 app:app
+gunicorn --bind=0.0.0.0 --timeout 1600 app:app
