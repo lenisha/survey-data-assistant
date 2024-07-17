@@ -20,4 +20,4 @@ echo "Setup complete."
 
 
 #npm install -g azure-functions-core-tools@4
-#func azure functionapp publish  $WEB_APP_NAME--no-zip -i
+#func azure functionapp publish  $WEB_APP_NAME --no-zip -i

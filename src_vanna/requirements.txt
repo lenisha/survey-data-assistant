@@ -1,4 +1,4 @@
-pysqlite3-binary
+#pysqlite3-binary
 chromadb
 vanna[chromadb,openai]
 openai
@@ -8,3 +8,4 @@ flask
 pyodbc
 db-dtypes
 python-dotenv
+gunicorn
