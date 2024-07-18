@@ -118,7 +118,7 @@ def parse_and_insert_labels(conn, row):
 
 def add_all_labels(conn, filename):
     # Reading data from 'survey_data' table
-    query = 'SELECT ID, Labels FROM survey_data WHERE File_Name ?'
+    query = 'SELECT ID, Labels FROM survey_data WHERE File_Name = ?'
     survey_data = pd.read_sql(query, conn, params=(filename,))
 
     print(f'found {len(survey_data)} rows')
