@@ -17,7 +17,7 @@ az webapp config set --resource-group $RESOURCE_GROUP --name $WEB_APP_NAME \
 echo "create ZIP file"
 
 pushd ../src
-zip -r deploy.zip  * assistant_flow/* survey_data_insights/* -x **__pycache__\* **/**/__pycache__\*  **/.chainlit\*
+zip -r deploy.zip  app.py chainlit.md requirements.txt assistant_flow/* survey_data_insights/* -x **__pycache__\* **/**/__pycache__\*  **/.chainlit\*
 
 echo "ZIP Deploy"
 az webapp deploy --resource-group $RESOURCE_GROUP  --name $WEB_APP_NAME --src-path deploy.zip

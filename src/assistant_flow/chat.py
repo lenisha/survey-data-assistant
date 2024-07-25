@@ -2,7 +2,7 @@ import os
 import logging
 
 # local imports
-from .core import AssistantsAPIGlue
+from assistant_flow.core import AssistantAPI
 from promptflow.tracing import start_trace, trace
 from openai import AzureOpenAI
 from survey_data_insights.main import SurveyDataInsights
@@ -64,11 +64,11 @@ def chat_completion(
     )
     survey_data_insights = SurveyDataInsights()
     
-    handler = AssistantsAPIGlue(client=client, 
-                                question=question, 
-                                session_state=session_state, 
-                                tools=dict(survey_data_insights=survey_data_insights))
-    return handler.run()
+
+    handler = AssistantAPI(client=client,                              
+                            session_state=session_state, 
+                            tools=dict(survey_data_insights=survey_data_insights))
+    return handler.start(question=question)
 
 def _test():
     """Test the chat completion function."""
@@ -113,7 +113,7 @@ if __name__ == "__main__":
         for token in _test()["chat_output"]:
             # write token to stream and flush
             f.write(str(token))
-            f.write("\n")
+            #f.write("\n")
             f.flush()
             
 

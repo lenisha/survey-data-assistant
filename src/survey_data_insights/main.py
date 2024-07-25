@@ -53,8 +53,9 @@ class SurveyDataInsights:
         import time
         start = time.time()
         
-        print("getting survey data insights")
+        print("Getting survey data insights from SQL database")
         print("question", question)
+        system_prompt  = os.getenv("SQL_GENERATION_PROMPT", system_message)
 
         if self.model_type == "azure_openai":
             messages = [{"role": "system", "content": system_message}]
@@ -89,6 +90,11 @@ class SurveyDataInsights:
         if query.startswith("```sql") and query.endswith("```"):
             query = query[6:-3].strip()
 
+        if query.lower().startswith("error"):
+            end = time.time()
+            execution_time = round(end - start, 2)
+            return {"data": None, "error": query, "query": query, "execution_time": 0}    
+
         try:
             print("*****  Executing SQL query:", query)
             data = self.query_db(query)
@@ -102,7 +108,12 @@ class SurveyDataInsights:
         end = time.time()
         execution_time = round(end - start, 2)
 
-        print(f"retrieved records {len(data)}")
+        print(f"SQL Retrieved records {len(data)}")
+        ## Shortcut if too much data to ask user to rephrase the question  
+        threshold = int( os.getenv("SQL_DATA_THRESHOLD", 500))
+        if (len(data) > threshold):    
+            return {"data": None, "error": "Too much data found, rephrase the question to aggregate and summarize daata", "query": query, "execution_time": execution_time}
+        
 
         return {"data": data, "error": str(None), "query": query, "execution_time": execution_time}
     
