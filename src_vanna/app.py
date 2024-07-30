@@ -50,15 +50,19 @@ def setup_training_data(vn: MyVanna, force_retrain = False):
 
     # You can also add SQL queries to your training data. This is useful if you have some queries already laying around. You can just copy and paste those from your editor to begin generating new SQL.
     vn.train(sql="SELECT * FROM survey_data WHERE Score > 5")
+    vn.train(sql="SELECT COUNT(Topics) AS TopicCount FROM survey_data WHERE Survey_Location LIKE '%UK%'")
     vn.train(documentation="""
+                You are expert in SQL database queries. Given an input question, create a syntactically correct SQL query to run and return ONLY the generated Query and nothing else.
                 Follow these Instructions for creating syntactically correct SQL query:
                 - In your reply only provide the SQL query with no extra formatting.
-                - To avoid issues with apostrophes, when referring to labels, always use double-quotes, for instance:
-                SELECT SUM(Scores) FROM survey_data WHERE Score = "9" AND Labels LIKE "Projectc'S Issue"
-                - When asked about topics or themes use column Label in "labels" table and join it with "survey_data" table using ID
+                - When asked about topics or themes use column Label in "labels" table and join it with "survey_data" table using ID field
                 - When retrieving most common or main occurrences of data, return only top 40 most frequent ( use sqldb syntax `select top 40` )
-                - filter out empty labels or label 'no topics'
-                - **MUST** Double check SQL
+                - Find items that include term or related to term by comparing suitable field using SQL syntax LIKE '%term%'
+                - If resulting query would return too much data attempt to aggregate and group data either by dates or by other category like Score or Survey Location
+                - Filter out empty or null values or 'no topics' from the 'Labels'
+                - Do not use SQL server keywords as table names or field aliases
+                - Lables are the same as topics or themes
+                - **MUST** Double check SQL syntax before sending the query
                 """)
 
 
