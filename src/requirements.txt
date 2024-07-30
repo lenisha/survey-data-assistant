@@ -10,3 +10,4 @@ numpy
 pyodbc
 sqlalchemy
 azure-ai-inference
+azure-monitor-opentelemetry-exporter --pre

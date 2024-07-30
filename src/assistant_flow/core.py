@@ -16,6 +16,7 @@ from promptflow.contracts.multimedia import Image
 from threading import Thread
 
 tracer = otel_trace.get_tracer(__name__)
+verbose = os.getenv("VERBOSE", "False").lower() == "true"
 
 class AssistantAPI:
     @trace
@@ -273,12 +274,22 @@ class EventHandler(AssistantEventHandler):
 
     @override
     def on_tool_call_created(self, tool_call):
-        self.queue.send(f"\n> tool_call: {tool_call.type}\n")
-        if tool_call.type == "function":
-            self.queue.send(f"> id  : {tool_call.id}\n")
-            self.queue.send(f"> name: {tool_call.function.name}\n> arguments: ")
-        elif tool_call.type == "code_interpreter":
-            self.queue.send(f"> id  : {tool_call.id}\n\n")
+        if verbose:
+            self.queue.send(f"\n> tool_call: {tool_call.type}\n")
+            if tool_call.type == "function":
+                self.queue.send(f"> id  : {tool_call.id}\n")
+                self.queue.send(f"> name: {tool_call.function.name}\n> arguments: ")
+            elif tool_call.type == "code_interpreter":
+                self.queue.send(f"> id  : {tool_call.id}\n\n")
+        else:
+            logging.info(f"\n> tool_call: {tool_call.type}\n")
+            if tool_call.type == "function":
+                self.queue.send(f"\n> Connecting to database\n")
+                logging.info(f"> id  : {tool_call.id}\n")
+                logging.info(f"> name: {tool_call.function.name}\n> arguments: ")
+            elif tool_call.type == "code_interpreter":
+                self.queue.send(f"\n> Analyzing data\n")
+                logging.info(f"> id  : {tool_call.id}\n\n")       
         
     @override
     def on_message_done(self, message: Message) -> None:
@@ -300,7 +311,10 @@ class EventHandler(AssistantEventHandler):
             #         if output.type == "logs":
             #             self.queue.send(f"\n{output.logs}\n")
         elif delta.type == "function":
-            self.queue.send(delta.function.arguments)
+            if verbose:
+                self.queue.send(delta.function.arguments)
+            else:
+                logging.info(delta.function.arguments)    
         else:
             self.queue.send(delta)
 

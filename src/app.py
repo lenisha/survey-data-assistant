@@ -25,6 +25,7 @@ from dotenv import load_dotenv
 import logging
 load_dotenv()
 
+
 def setup_app_insights():
     from promptflow.tracing._integrations._openai_injector import inject_openai_api
     inject_openai_api()
@@ -36,18 +37,21 @@ def setup_app_insights():
     # Set the Tracer Provider
     trace.set_tracer_provider(TracerProvider())
 
-    from azure.monitor.opentelemetry.exporter import AzureMonitorTraceExporter
+    try:
+        from azure.monitor.opentelemetry.exporter import AzureMonitorTraceExporter
 
-    # Configure Azure Monitor as the Exporter
-    print("using the following connection string", os.getenv('APPLICATIONINSIGHTS_CONNECTION_STRING'))
-    trace_exporter = AzureMonitorTraceExporter(
-        connection_string=os.getenv('APPLICATIONINSIGHTS_CONNECTION_STRING')
-    )
+        # Configure Azure Monitor as the Exporter
+        logging.info("using the following connection string", os.getenv('APPLICATIONINSIGHTS_CONNECTION_STRING'))
+        trace_exporter = AzureMonitorTraceExporter(
+            connection_string=os.getenv('APPLICATIONINSIGHTS_CONNECTION_STRING')
+        )
 
-    # Add the Azure exporter to the tracer provider
-    trace.get_tracer_provider().add_span_processor(
-        SimpleSpanProcessor(trace_exporter)
-    )
+        # Add the Azure exporter to the tracer provider
+        trace.get_tracer_provider().add_span_processor(
+            SimpleSpanProcessor(trace_exporter)
+        )
+    except Exception as e:
+        logging.info(f"Error setting up Azure Monitor: {e}")        
 
     # Configure Console as the Exporter
     file = open('spans.json', 'w')
@@ -63,6 +67,8 @@ def setup_app_insights():
 
     # Get a tracer
     return trace.get_tracer(__name__) 
+
+
 
 @cl.set_starters
 def set_starters():
@@ -85,8 +91,8 @@ def set_starters():
 
 @cl.on_chat_start
 def start_chat():
-    print("starting chat")
-
+    logging.info("starting chat")
+    
     cl.user_session.set("last_message_context", None)
     cl.user_session.set("session_state", {})    
 
@@ -141,10 +147,17 @@ async def call_promptflow(message):
 
 
 def log_evaluation_event(name: str, scores: dict, span_context: dict, message: str) -> None:
-    trace_id = int(span_context["traceparent"].split("-")[1], 16)
-    span_id = int(span_context["traceparent"].split("-")[2], 16)
-    trace_flags = TraceFlags(int(span_context["traceparent"].split("-")[3], 16))
-    # print(trace_id, span_id, trace_flags)
+    if span_context is None or "traceparent" not in span_context:
+        logging.info("No span context found")
+        trace_id = 0
+        span_id = 0
+        trace_flags = TraceFlags(0)
+    else:
+        logging.info("Span context found")
+        trace_id = int(span_context["traceparent"].split("-")[1], 16)
+        span_id = int(span_context["traceparent"].split("-")[2], 16)
+        trace_flags = TraceFlags(int(span_context["traceparent"].split("-")[3], 16))
+    logging.info(f"Tracing: {trace_id}, {span_id}, {trace_flags}")
     
     attributes = {"event.name": f"gen_ai.evaluation.{name}"}
     for key, value in scores.items():
@@ -232,7 +245,7 @@ if __name__ == "__main__":
     start_trace()
     setup_app_insights()
 
-    print("using the follwoing chat_model", os.getenv("OPENAI_CHAT_MODEL"))
+    logging.info("using the follwoing chat_model", os.getenv("OPENAI_CHAT_MODEL"))
 
     from chainlit.cli import run_chainlit
     run_chainlit(__file__)
