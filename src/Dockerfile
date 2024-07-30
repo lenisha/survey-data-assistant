@@ -29,10 +29,12 @@ RUN apt-get update && \
 RUN apt-get update
 
 # Add the Microsoft repository GPG keys to the list of trusted keys
-RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
+#RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
+RUN curl https://packages.microsoft.com/keys/microsoft.asc |  tee /etc/apt/trusted.gpg.d/microsoft.asc
 
 # Add the Microsoft package repository to the system
-RUN curl https://packages.microsoft.com/config/debian/11/prod.list > /etc/apt/sources.list.d/mssql-release.list 
+#RUN curl https://packages.microsoft.com/config/debian/11/prod.list > /etc/apt/sources.list.d/mssql-release.list 
+RUN curl https://packages.microsoft.com/config/debian/11/prod.list |  tee /etc/apt/sources.list.d/mssql-release.list
 
 # Dummy command to ensure previous RUN commands succeed before proceeding
 RUN exit

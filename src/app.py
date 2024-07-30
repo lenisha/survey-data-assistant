@@ -41,9 +41,9 @@ def setup_app_insights():
         from azure.monitor.opentelemetry.exporter import AzureMonitorTraceExporter
 
         # Configure Azure Monitor as the Exporter
-        logging.info("using the following connection string", os.getenv('APPLICATIONINSIGHTS_CONNECTION_STRING'))
+        logging.info(f"using the following connection string {os.getenv('APPLICATIONINSIGHTS_CONNECTION_STRING','')}")
         trace_exporter = AzureMonitorTraceExporter(
-            connection_string=os.getenv('APPLICATIONINSIGHTS_CONNECTION_STRING')
+            connection_string=os.getenv('APPLICATIONINSIGHTS_CONNECTION_STRING','')
         )
 
         # Add the Azure exporter to the tracer provider
@@ -245,7 +245,7 @@ if __name__ == "__main__":
     start_trace()
     setup_app_insights()
 
-    logging.info("using the follwoing chat_model", os.getenv("OPENAI_CHAT_MODEL"))
+    #logging.info("using the follwoing chat_model", os.getenv("OPENAI_CHAT_MODEL"))
 
     from chainlit.cli import run_chainlit
     run_chainlit(__file__)
