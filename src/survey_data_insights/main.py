@@ -124,7 +124,7 @@ class SurveyDataInsights:
         # Create the connection string
         params = urllib.parse.quote_plus(conn_str)
         # Create the SQLAlchemy engine
-        sql_connection = create_engine(f"mssql+pyodbc:///?odbc_connect={params}",pool_pre_ping=True)
+        sql_connection = create_engine(f"mssql+pyodbc:///?odbc_connect={params}",pool_pre_ping=True,pool_recycle=3600)
         # Create the connection        
         #sql_connection = pyodbc.connect(conn_str)
 
